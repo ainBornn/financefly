@@ -1,0 +1,12 @@
+{
+  "overall_status": "ready",
+  "summary": {
+    "total_checks": 6,
+    "passed": 5,
+    "warnings": 1,
+    "failed": 0
+  },
+  "recommendations": [
+    "Check .vercelignore: .vercelignore not found"
+  ]
+}
