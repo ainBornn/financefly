@@ -1,25 +1,40 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3-slim
+# Use uma imagem oficial do Python (escolhi 3.11-slim por compatibilidade com wheels)
+FROM python:3.11-slim
 
-EXPOSE 8000
+# Instala dependências do sistema necessárias para Pillow e psycopg
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      gcc \
+      libpq-dev \
+      zlib1g-dev \
+      libjpeg-dev \
+      libfreetype6-dev \
+      liblcms2-dev \
+      libopenjp2-7-dev \
+      libtiff5-dev \
+      libwebp-dev \
+ && rm -rf /var/lib/apt/lists/*
 
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
-
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
-
+# Cria diretório app
 WORKDIR /app
-COPY . /app
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+# Copia requirements e instala (usa pip wheel cache e não roda streamlit como root)
+COPY requirements.txt .
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "app:app"]
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements.txt
+
+# Copia o código
+COPY . .
+
+# Expõe porta (opcional)
+EXPOSE 8501
+
+# Porta padrão (pode ser sobrescrita pelo ambiente, ex: Railway fornece $PORT)
+ENV PORT=8501
+
+# Comando default para rodar o Streamlit — usa a variável $PORT para compatibilidade com plataformas
+# Usamos shell form via `sh -c` para expandir a variável de ambiente.
+CMD ["sh", "-c", "streamlit run app.py --server.port ${PORT} --server.address 0.0.0.0 --server.headless true"]
