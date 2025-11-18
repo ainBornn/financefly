@@ -3,6 +3,16 @@ import sys
 import traceback
 import streamlit as st
 
+# =========================================================
+# CONFIG STREAMLIT (deve ser o primeiro comando Streamlit)
+# =========================================================
+try:
+    st.set_page_config(page_title="Financefly Connector", page_icon="💸", layout="centered")
+    print("✅ STEP 2: Configuração do Streamlit OK", flush=True)
+except Exception as e:
+    print("🔥 ERRO ao configurar Streamlit:", e, flush=True)
+    traceback.print_exc()
+
 print("🚀 STEP 0: app.py iniciado com sucesso", flush=True)
 
 try:
@@ -15,15 +25,9 @@ except Exception as e:
     traceback.print_exc()
     st.error(f"Erro ao importar módulos: {e}")
 
-# ========================================================= 
-# CONFIG STREAMLIT
 # =========================================================
-try:
-    st.set_page_config(page_title="Financefly Connector", page_icon="💸", layout="centered")
-    print("✅ STEP 2: Configuração do Streamlit OK", flush=True)
-except Exception as e:
-    print("🔥 ERRO ao configurar Streamlit:", e, flush=True)
-    traceback.print_exc()
+# (Config moved earlier to ensure it's the first Streamlit command)
+# =========================================================
 
 # =========================================================
 # STARTUP SAFE
