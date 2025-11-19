@@ -127,19 +127,39 @@ try:
         st.info("Abrindo o Pluggy Connect…")
         print("✅ STEP 12: Exibindo widget Pluggy", flush=True)
 
+        # Open Pluggy Connect in a new window to avoid iframe sandboxing issues
+        token = st.session_state.connect_token
+        # The injected script will open a popup and write an HTML page that loads the Pluggy script
         html = f"""
-        <script src="https://cdn.pluggy.ai/pluggy-connect/v2.9.2/pluggy-connect.js"></script>
         <script>
-            const connect = new PluggyConnect({{
-                connectToken: "{st.session_state.connect_token}",
-                includeSandbox: false,
-                language: "pt",
-                theme: "dark"
-            }});
-            connect.open();
+        (function() {{
+            try {{
+                var w = window.open('', '_blank');
+                if (!w) {{
+                    document.body.innerHTML += '<p style="color:orange">Popup blocked. Please allow popups for this site and try again.</p>';
+                    console.error('Popup blocked - allow popups and reload.');
+                    return;
+                }}
+                var doc = w.document;
+                var token = "{token}";
+                var html = `<!doctype html><html><head><meta charset="utf-8"><title>Pluggy Connect</title></head><body>`
+                         + `<div id="pluggy-root"></div>`
+                         + `<script src="https://cdn.pluggy.ai/pluggy-connect/v2.9.2/pluggy-connect.js"></script>`
+                         + `<script>`
+                         + `try {{ const connect = new PluggyConnect({{ connectToken: token, includeSandbox: false, language: 'pt', theme: 'dark' }}); if (connect && typeof connect.open === 'function') {{ connect.open(); }} else {{ console.error('PluggyConnect not available or connect.open is not a function', connect); document.body.innerHTML += '<p style="color:red">Erro: o widget Pluggy não pôde ser iniciado. Verifique bloqueadores (adblock) e se o script foi carregado.</p>'; }} }} catch(e) {{ console.error('Erro ao iniciar Pluggy:', e); document.body.innerHTML += '<p style="color:red">Erro JS: ' + String(e) + '</p>'; }}`
+                         + `</` + `script>`
+                         + `</body></html>`;
+                doc.open();
+                doc.write(html);
+                doc.close();
+            }} catch (err) {{
+                console.error('Erro ao abrir a janela do Pluggy:', err);
+                document.body.innerHTML += '<p style="color:red">Erro ao abrir o Pluggy Connect: ' + String(err) + '</p>';
+            }}
+        }})();
         </script>
         """
-        st.components.v1.html(html, height=600)
+        st.components.v1.html(html, height=50)
         print("✅ STEP 13: Widget Pluggy renderizado", flush=True)
 except Exception as e:
     print("🔥 ERRO no widget Pluggy:", e, flush=True)
